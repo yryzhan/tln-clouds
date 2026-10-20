@@ -1,0 +1,24 @@
+name: Terraform test
+on:
+  pull_request:
+    paths: ["aws/**", ".github/workflows/terraform-test.yml"]
+  push:
+    branches: [main]
+    paths: ["aws/**"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e
+        with:
+          terraform_version: 1.14.8
+      - run: |
+          set -euo pipefail
+          for dir in aws/*/; do
+            [ -d "${dir}tests" ] || continue
+            (cd "$dir" && terraform init -backend=false -input=false && terraform test)
+          done
